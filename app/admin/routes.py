@@ -3,6 +3,15 @@ from functools import wraps
 from . import admin_bp
 from data import posts
 
+def requer_login(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'usuario_logado' not in session:
+            flash('Você precisa estar logado.', 'error')
+            return redirect(url_for('admin.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # Credenciais (apenas para demonstração)
 USUARIO_ADMIN = 'admin'
 SENHA_ADMIN = '123'
@@ -29,6 +38,7 @@ def login():
     return render_template('admin/login.html')
 
 @admin_bp.route('/logout')
+@requer_login
 def logout():
     """
     Rota: GET /admin/logout
@@ -40,14 +50,6 @@ def logout():
 
 # ========== CRUD ==========
 
-def requer_login(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'usuario_logado' not in session:
-            flash('Você precisa estar logado.', 'error')
-            return redirect(url_for('admin.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Uso:
 @admin_bp.route('/dashboard')
@@ -56,6 +58,7 @@ def dashboard():
     return render_template('admin/dashboard.html', posts=posts)
 
 @admin_bp.route('/novo', methods=['GET', 'POST'])
+@requer_login
 def novo_post():
     """
     Rota: GET/POST /admin/novo
@@ -84,6 +87,7 @@ def novo_post():
     return render_template('admin/new_post.html')
 
 @admin_bp.route('/editar/<int:post_id>', methods=['GET', 'POST'])
+@requer_login
 def editar_post(post_id):
     """
     Rota: GET/POST /admin/editar/<id>
@@ -109,6 +113,7 @@ def editar_post(post_id):
     return render_template('admin/edit_post.html', post=post)
 
 @admin_bp.route('/deletar/<int:post_id>')
+@requer_login
 def deletar_post(post_id):
     """
     Rota: GET /admin/deletar/<id>
